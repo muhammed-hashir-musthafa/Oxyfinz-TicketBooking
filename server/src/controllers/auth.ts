@@ -141,3 +141,16 @@ export const updateProfile = async (req: Request, res: Response) => {
     return errorResponse(res, 500, "Internal server error", error);
   }
 };
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    // Clear cookies
+    res.clearCookie('token');
+    res.clearCookie('refreshToken');
+    
+    return successResponse(res, "Logged out successfully");
+  } catch (error) {
+    console.error("Logout error:", error);
+    return errorResponse(res, 500, "Internal server error", error);
+  }
+};

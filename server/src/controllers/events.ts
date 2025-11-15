@@ -140,6 +140,17 @@ export const registerForEvent = async (req: Request, res: Response) => {
       return errorResponse(res, 400, "Event is full");
     }
 
+    // Update user with registration data
+    const { name, email, phone, emergencyContact, specialRequirements } = req.body;
+    await User.findByIdAndUpdate(req.user?.id, {
+      id: req.user?.id,
+      name: name,
+      email: email,
+      phone,
+      emergencyContact,
+      specialRequirements
+    });
+
     event.registeredUsers.push(req.user?.id as any);
     await event.save();
 

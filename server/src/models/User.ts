@@ -32,6 +32,18 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: "",
     },
+    phone: {
+      type: String,
+      default: "",
+    },
+    emergencyContact: {
+      type: String,
+      default: "",
+    },
+    specialRequirements: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
