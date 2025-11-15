@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth";
 import eventRoutes from "./routes/events";
+import uploadRoutes from "./routes/upload";
 import { errorHandler } from "./middlewares/error";
 import connectDB from "./config/db";
 import http from "http";
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.use(errorHandler);
 
