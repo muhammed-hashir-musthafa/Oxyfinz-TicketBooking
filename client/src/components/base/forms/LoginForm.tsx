@@ -30,7 +30,7 @@ const LoginForm: React.FC = () => {
 
   const handleSubmit = async (values: LoginFormValues) => {
     try {
-      await login(values.email, values.password);
+      await login(values.email, values.password, values.role as 'user' | 'admin');
     } catch {
       // Error handled in context
     }
