@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Navbar } from "@/components/base/ui/Navbar";
 import { Card } from "@/components/base/ui/Card";
 import { User, DashboardStats } from "@/types";
@@ -181,15 +182,15 @@ export default function AdminDashboardPage() {
                 Quick Actions
               </h2>
               <div className="space-y-3">
-                <a href="/admin/events/add" className="block">
+                <Link href="/admin/events/add" className="block">
                   <div className="p-4 bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all cursor-pointer">
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">➕</span>
                       <span className="font-semibold">Create New Event</span>
                     </div>
                   </div>
-                </a>
-                <a href="/admin/events" className="block">
+                </Link>
+                <Link href="/admin/events" className="block">
                   <div className="p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 transition-all cursor-pointer">
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">📋</span>
@@ -198,8 +199,8 @@ export default function AdminDashboardPage() {
                       </span>
                     </div>
                   </div>
-                </a>
-                <a href="/admin/users" className="block">
+                </Link>
+                <Link href="/admin/users" className="block">
                   <div className="p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 transition-all cursor-pointer">
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">👥</span>
@@ -208,8 +209,8 @@ export default function AdminDashboardPage() {
                       </span>
                     </div>
                   </div>
-                </a>
-                <a href="/admin/reports" className="block">
+                </Link>
+                <Link href="/admin/reports" className="block">
                   <div className="p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 transition-all cursor-pointer">
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">📊</span>
@@ -218,7 +219,7 @@ export default function AdminDashboardPage() {
                       </span>
                     </div>
                   </div>
-                </a>
+                </Link>
               </div>
             </Card>
           </div>
