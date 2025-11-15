@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { User } from "@/types";
 import { Button } from "./Button";
 
@@ -11,6 +12,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
+  const pathname = usePathname();
   const isAdmin = user?.role === "admin";
   const basePath = isAdmin ? "/admin" : "";
 
@@ -19,6 +21,18 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const usersHref = `${basePath}/users`;
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "?";
+
+  const isActive = (href: string) => {
+    if (isAdmin) {
+      if (href === "/admin" && pathname === "/admin") return true;
+      if (href === "/admin/events" && pathname.startsWith("/admin/events")) return true;
+      if (href === "/admin/users" && pathname.startsWith("/admin/users")) return true;
+    } else {
+      if (href === "/" && pathname === "/") return true;
+      if (href === "/events" && pathname.startsWith("/events")) return true;
+    }
+    return false;
+  };
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50 shadow-sm">
@@ -48,14 +62,22 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           <div className="hidden md:flex items-center space-x-8">
             <Link
               href={homeHref}
-              className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
+              className={`font-medium transition-colors ${
+                isActive(homeHref)
+                  ? "text-purple-600 border-b-2 border-purple-600 pb-1"
+                  : "text-gray-700 hover:text-purple-600"
+              }`}
             >
               Home
             </Link>
 
             <Link
               href={eventsHref}
-              className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
+              className={`font-medium transition-colors ${
+                isActive(eventsHref)
+                  ? "text-purple-600 border-b-2 border-purple-600 pb-1"
+                  : "text-gray-700 hover:text-purple-600"
+              }`}
             >
               Events
             </Link>
@@ -63,7 +85,11 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             {isAdmin && (
               <Link
                 href={usersHref}
-                className="text-gray-700 hover:text-purple-600 font-medium transition-colors"
+                className={`font-medium transition-colors ${
+                  isActive(usersHref)
+                    ? "text-purple-600 border-b-2 border-purple-600 pb-1"
+                    : "text-gray-700 hover:text-purple-600"
+                }`}
               >
                 Users
               </Link>

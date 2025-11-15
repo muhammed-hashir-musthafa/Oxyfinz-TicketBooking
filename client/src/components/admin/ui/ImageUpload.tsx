@@ -2,9 +2,8 @@
 
 import React, { useState } from 'react';
 import {  X, Image as ImageIcon } from 'lucide-react';
-import axios from 'axios';
-import Cookies from 'js-cookie';
 import Image from 'next/image';
+import uploadService from '@/services/uploadService';
 
 interface ImageUploadProps {
   value?: string;
@@ -36,23 +35,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     // Upload to server
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const token = Cookies.get('token');
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/upload/image`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        onChange(response.data.data.imageUrl);
+      const response = await uploadService.uploadImage(file);
+      if (response.success) {
+        onChange(response.data.imageUrl);
       }
     } catch (error) {
       console.error('Upload failed:', error);
@@ -73,7 +58,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         {label}
       </label>
       
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+      <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
         {preview ? (
           <div className="relative">
             <Image
