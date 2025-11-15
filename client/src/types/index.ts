@@ -5,6 +5,9 @@ export interface User {
   email: string;
   role: 'user' | 'admin';
   avatar?: string;
+  phone?: string;
+  emergencyContact?: string;
+  specialRequirements?: string;
   createdAt: string;
 }
 
@@ -21,6 +24,7 @@ export interface Event {
   availableSeats: number;
   totalSeats: number;
   organizer: string;
+  registeredUsers?: string[];
 }
 
 export interface Booking {
