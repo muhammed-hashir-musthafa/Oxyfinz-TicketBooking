@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/base/ui/Navbar";
 import { Card } from "@/components/base/ui/Card";
-import { User } from "@/types";
+import { FormSkeleton } from "@/components/base/ui/Skeleton";
+import { useAuth } from "@/context/AuthContext";
+import { eventService } from "@/services";
 import EventForm from "@/components/admin/forms/EventForm";
+import toast from "react-hot-toast";
 
 interface AdminEventDetailPageProps {
   eventId: string;
@@ -13,69 +16,71 @@ interface AdminEventDetailPageProps {
 
 export default function AdminEventDetailPage({ eventId }: AdminEventDetailPageProps) {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const isNew = eventId === "new";
 
-  const [user] = useState<User>({
-    id: "1",
-    name: "Admin User",
-    email: "admin@tickethub.com",
-    role: "admin",
-    createdAt: "2023-01-01",
-  });
+  const [loading, setLoading] = useState(!isNew);
+  const [submitting, setSubmitting] = useState(false);
+  const [initialData, setInitialData] = useState<any>(undefined);
 
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!isNew) {
+      fetchEvent();
+    }
+  }, [eventId, isNew]);
 
-  // Mock initial data for existing events - use eventId for data fetching
-  const initialData = !isNew ? {
-    title: "Summer Music Festival 2024",
-    description: "Join us for an unforgettable night of live music featuring top artists from around the world.",
-    date: "2024-07-15",
-    time: "18:00",
-    venue: "Central Park Arena",
-    category: "Music",
-    price: 89,
-    image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800",
-    totalSeats: 500,
-    organizer: "EventPro Inc.",
-  } : undefined;
-
-  const handleSubmit = async (values: {
-    title: string;
-    description: string;
-    date: string;
-    time: string;
-    venue: string;
-    category: string;
-    price: number;
-    totalSeats: number;
-    image: string;
-    organizer: string;
-  }) => {
-    setLoading(true);
+  const fetchEvent = async () => {
     try {
-      // Mock save - replace with API call
-      console.log('Saving event:', values);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert(isNew ? "Event created successfully!" : "Event updated successfully!");
-      router.push("/admin/events");
+      const response = await eventService.getEvent(eventId);
+      if (response.success) {
+        setInitialData(response.data.event);
+      }
     } catch (error) {
-      console.error('Error saving event:', error);
+      console.error('Failed to fetch event:', error);
+      toast.error('Failed to load event');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSubmit = async (values: any) => {
+    setSubmitting(true);
+    try {
+      if (isNew) {
+        const response = await eventService.createEvent(values);
+        if (response.success) {
+          toast.success('Event created successfully!');
+          router.push('/admin/events');
+        }
+      } else {
+        const response = await eventService.updateEvent(eventId, values);
+        if (response.success) {
+          toast.success('Event updated successfully!');
+          router.push('/admin/events');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast.error('Failed to save event');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleDelete = async () => {
-    if (confirm("Are you sure you want to delete this event?")) {
-      setLoading(true);
+    if (confirm('Are you sure you want to delete this event?')) {
+      setSubmitting(true);
       try {
-        // Mock delete - replace with API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        router.push("/admin/events");
+        const response = await eventService.deleteEvent(eventId);
+        if (response.success) {
+          toast.success('Event deleted successfully!');
+          router.push('/admin/events');
+        }
       } catch (error) {
         console.error('Error deleting event:', error);
+        toast.error('Failed to delete event');
       } finally {
-        setLoading(false);
+        setSubmitting(false);
       }
     }
   };
@@ -86,7 +91,7 @@ export default function AdminEventDetailPage({ eventId }: AdminEventDetailPagePr
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
-      <Navbar user={user} onLogout={() => {}} />
+      <Navbar user={user} onLogout={logout} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10">
@@ -101,14 +106,18 @@ export default function AdminEventDetailPage({ eventId }: AdminEventDetailPagePr
         </div>
 
         <Card className="p-8">
-          <EventForm
-            initialValues={initialData}
-            onSubmit={handleSubmit}
-            onDelete={!isNew ? handleDelete : undefined}
-            onCancel={handleCancel}
-            isNew={isNew}
-            loading={loading}
-          />
+          {loading ? (
+            <FormSkeleton />
+          ) : (
+            <EventForm
+              initialValues={initialData}
+              onSubmit={handleSubmit}
+              onDelete={!isNew ? handleDelete : undefined}
+              onCancel={handleCancel}
+              isNew={isNew}
+              loading={submitting}
+            />
+          )}
         </Card>
       </div>
     </div>

@@ -1,74 +1,53 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/base/ui/Navbar";
 import { Card } from "@/components/base/ui/Card";
 import { Button } from "@/components/base/ui/Button";
 import { Input } from "@/components/base/ui/Input";
-import { Event, User } from "@/types";
+import { Event } from "@/types";
+import { useAuth } from "@/context/AuthContext";
+import { eventService } from "@/services";
+import { TableRowSkeleton } from "@/components/base/ui/Skeleton";
 import Image from "next/image";
-
-const MOCK_EVENTS: Event[] = [
-  {
-    id: "1",
-    title: "Summer Music Festival 2024",
-    description: "Amazing music festival",
-    date: "2024-07-15",
-    time: "18:00",
-    venue: "Central Park Arena",
-    category: "Music",
-    price: 89,
-    image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800",
-    availableSeats: 450,
-    totalSeats: 500,
-    organizer: "EventPro Inc.",
-  },
-  {
-    id: "2",
-    title: "Tech Innovation Summit",
-    description: "Latest in technology",
-    date: "2024-08-20",
-    time: "09:00",
-    venue: "Convention Center",
-    category: "Technology",
-    price: 150,
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800",
-    availableSeats: 200,
-    totalSeats: 300,
-    organizer: "TechWorld",
-  },
-  {
-    id: "3",
-    title: "Food & Wine Experience",
-    description: "Culinary excellence",
-    date: "2024-09-10",
-    time: "17:00",
-    venue: "Riverside Garden",
-    category: "Food",
-    price: 120,
-    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800",
-    availableSeats: 150,
-    totalSeats: 200,
-    organizer: "Culinary Masters",
-  },
-];
+import toast from "react-hot-toast";
 
 export default function AdminEventsPage() {
-  const [user] = useState<User>({
-    id: "1",
-    name: "Admin User",
-    email: "admin@tickethub.com",
-    role: "admin",
-    createdAt: "2023-01-01",
-  });
-
-  // initialize events directly (avoid setState inside useEffect)
-  const [events, setEvents] = useState<Event[]>(MOCK_EVENTS);
+  const { user, logout } = useAuth();
+  const [events, setEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const handleDelete = (id: string) => {
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await eventService.getMyEvents();
+      if (response.success) {
+        setEvents(response.data.events);
+      }
+    } catch (error) {
+      console.error('Failed to fetch events:', error);
+      toast.error('Failed to load events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this event?")) {
-      setEvents((prev) => prev.filter((e) => e.id !== id));
+      try {
+        const response = await eventService.deleteEvent(id);
+        if (response.success) {
+          setEvents((prev) => prev.filter((e) => e.id !== id));
+          toast.success('Event deleted successfully');
+        }
+      } catch (error) {
+        console.error('Failed to delete event:', error);
+        toast.error('Failed to delete event');
+      }
     }
   };
 
@@ -84,7 +63,7 @@ export default function AdminEventsPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
-      <Navbar user={user} onLogout={() => {}} />
+      <Navbar user={user} onLogout={logout} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex justify-between items-center mb-10">
@@ -132,66 +111,72 @@ export default function AdminEventsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredEvents.map((event) => (
-                  <tr
-                    key={event.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
-                        <Image
-                          width={64}
-                          height={64}
-                          src={event.image}
-                          alt={event.title}
-                          className="w-16 h-16 rounded-lg object-cover"
-                        />
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {event.title}
-                          </p>
-                          <p className="text-sm text-gray-600">{event.venue}</p>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <TableRowSkeleton key={index} />
+                  ))
+                ) : (
+                  filteredEvents.map((event) => (
+                    <tr
+                      key={event.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <Image
+                            width={64}
+                            height={64}
+                            src={event.image || '/placeholder.jpg'}
+                            alt={event.title}
+                            className="w-16 h-16 rounded-lg object-cover"
+                          />
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {event.title}
+                            </p>
+                            <p className="text-sm text-gray-600">{event.venue}</p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                        {event.category}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">{event.date}</td>
-                    <td className="px-6 py-4 text-gray-900 font-semibold">
-                      ${event.price}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`font-medium ${
-                          event.availableSeats < 50
-                            ? "text-red-600"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {event.availableSeats}/{event.totalSeats}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link href={`/admin/events/${event.id}`}>
-                          <Button variant="ghost" size="sm">
-                            Edit
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDelete(event.id)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                          {event.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-700">{event.date}</td>
+                      <td className="px-6 py-4 text-gray-900 font-semibold">
+                        ${event.price}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`font-medium ${
+                            event.availableSeats < 50
+                              ? "text-red-600"
+                              : "text-green-600"
+                          }`}
                         >
-                          Delete
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {event.availableSeats}/{event.totalSeats}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link href={`/admin/events/${event.id}`}>
+                            <Button variant="ghost" size="sm">
+                              Edit
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDelete(event.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/base/ui/Navbar";
 import { Card } from "@/components/base/ui/Card";
-import { User, DashboardStats } from "@/types";
+import { StatCardSkeleton } from "@/components/base/ui/Skeleton";
+import { DashboardStats } from "@/types";
+import { useAuth } from "@/context/AuthContext";
+import { eventService, userService } from "@/services";
 
 type Activity =
   | { id: number; type: "booking"; user: string; event: string; time: string }
@@ -12,21 +15,42 @@ type Activity =
   | { id: number; type: "event"; event: string; action: string; time: string };
 
 export default function AdminDashboardPage() {
-  const [user] = useState<User>({
-    id: "1",
-    name: "Admin User",
-    email: "admin@tickethub.com",
-    role: "admin",
-    createdAt: "2023-01-01",
+  const { user, logout } = useAuth();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalEvents: 0,
+    totalUsers: 0,
+    totalBookings: 0,
+    revenue: 0,
   });
+  const [loading, setLoading] = useState(true);
 
-  // initialize stats directly
-  const [stats] = useState<DashboardStats>({
-    totalEvents: 48,
-    totalUsers: 1234,
-    totalBookings: 892,
-    revenue: 145680,
-  });
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [eventsResponse, usersResponse] = await Promise.all([
+          eventService.getEvents(),
+          userService.getAllUsers()
+        ]);
+
+        if (eventsResponse.success && usersResponse.success) {
+          setStats({
+            totalEvents: eventsResponse.data.events.length,
+            totalUsers: usersResponse.data.users.length,
+            totalBookings: eventsResponse.data.events.reduce((sum, event) => 
+              sum + (event.totalSeats - event.availableSeats), 0),
+            revenue: eventsResponse.data.events.reduce((sum, event) => 
+              sum + (event.price * (event.totalSeats - event.availableSeats)), 0),
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   // typed recent activity, initialized directly (no effect)
   const [recentActivity] = useState<Activity[]>([
@@ -93,34 +117,40 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
-      <Navbar user={user} onLogout={() => {}} />
+      <Navbar user={user} onLogout={logout} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10">
           <h1 className="text-5xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600 text-lg">Welcome back, {user.name}</p>
+          <p className="text-gray-600 text-lg">Welcome back, {user?.name}</p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {statCards.map((stat, index) => (
-            <Card key={index} className="p-6 hover:shadow-xl transition-all">
-              <div className="flex items-center justify-between mb-4">
-                <div
-                  className={`w-14 h-14 bg-linear-to-r ${stat.color} rounded-2xl flex items-center justify-center text-3xl`}
-                >
-                  {stat.icon}
+          {loading ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <StatCardSkeleton key={index} />
+            ))
+          ) : (
+            statCards.map((stat, index) => (
+              <Card key={index} className="p-6 hover:shadow-xl transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`w-14 h-14 bg-linear-to-r ${stat.color} rounded-2xl flex items-center justify-center text-3xl`}
+                  >
+                    {stat.icon}
+                  </div>
+                  <span className="text-green-600 text-sm font-semibold bg-green-50 px-3 py-1 rounded-full">
+                    {stat.change}
+                  </span>
                 </div>
-                <span className="text-green-600 text-sm font-semibold bg-green-50 px-3 py-1 rounded-full">
-                  {stat.change}
-                </span>
-              </div>
-              <h3 className="text-gray-600 text-sm font-medium mb-1">
-                {stat.title}
-              </h3>
-              <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-            </Card>
-          ))}
+                <h3 className="text-gray-600 text-sm font-medium mb-1">
+                  {stat.title}
+                </h3>
+                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+              </Card>
+            ))
+          )}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
