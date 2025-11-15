@@ -1,12 +1,17 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Event, User } from "@/types";
+import { Event } from "@/types";
 import { Button } from "@/components/base/ui/Button";
 import { Navbar } from "@/components/base/ui/Navbar";
 import { Card } from "@/components/base/ui/Card";
+import { useAuth } from "@/context/AuthContext";
+import { eventService } from "@/services";
+import EventRegistrationForm from "@/components/user/forms/EventRegistrationForm";
+import { EventDetailSkeleton } from "@/components/base/ui/Skeleton";
 import Image from "next/image";
+import toast from "react-hot-toast";
 
 interface EventDetailPageProps {
   eventId: string;
@@ -14,52 +19,113 @@ interface EventDetailPageProps {
 
 export default function EventDetailPage({ eventId }: EventDetailPageProps) {
   const router = useRouter();
+  const { user, logout } = useAuth();
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [registering, setRegistering] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
-  const [user, setUser] = useState<User | null>(null);
-  const [seats, setSeats] = useState(1);
+  const fetchEvent = useCallback(async () => {
+    try {
+      const response = await eventService.getEvent(eventId);
+      if (response.success) {
+        setEvent(response.data.event);
+        // Check if user is already registered
+        if (user && response.data.event.registeredUsers?.includes(user.id)) {
+          setIsRegistered(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch event:', error);
+      toast.error('Failed to load event');
+    } finally {
+      setLoading(false);
+    }
+  }, [eventId, user]);
 
-  // derive event from eventId using useMemo instead of setting state inside useEffect
-  const event = useMemo<Event | null>(() => {
-    if (!eventId) return null;
+  useEffect(() => {
+    if (eventId) {
+      fetchEvent();
+    }
+  }, [eventId, fetchEvent]);
 
-    // mock data - replace this lookup with your real data fetch
-    const mock: Event = {
-      id: eventId,
-      title: "Summer Music Festival 2024",
-      description:
-        "Join us for an unforgettable night of live music featuring top artists from around the world. Experience breathtaking performances, amazing light shows, and create memories that will last a lifetime. This festival brings together music lovers from all walks of life for a celebration of sound and community.",
-      date: "2024-07-15",
-      time: "18:00",
-      venue: "Central Park Arena",
-      category: "Music",
-      price: 89,
-      image:
-        "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1200",
-      availableSeats: 450,
-      totalSeats: 500,
-      organizer: "EventPro Inc.",
-    };
-
-    return mock;
-  }, [eventId]);
-
-  const handleBooking = () => {
+  const handleRegistrationClick = () => {
     if (!user) {
       router.push("/login");
       return;
     }
-    if (event) {
-      alert(`Booking ${seats} seat(s) for $${event.price * seats}`);
+
+    if (isRegistered) {
+      handleUnregister();
+    } else {
+      setShowRegistrationForm(true);
     }
   };
 
+  const handleUnregister = async () => {
+    if (!event) return;
+
+    setRegistering(true);
+    try {
+      const response = await eventService.unregisterFromEvent(event.id);
+      if (response.success) {
+        setIsRegistered(false);
+        toast.success('Successfully unregistered from event');
+        fetchEvent();
+      }
+    } catch (error) {
+      console.error('Unregistration failed:', error);
+      toast.error('Unregistration failed');
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleRegistrationSubmit = async (values: {
+    name: string;
+    email: string;
+    phone: string;
+    emergencyContact: string;
+    specialRequirements?: string;
+  }) => {
+    if (!event) return;
+
+    setRegistering(true);
+    try {
+      const response = await eventService.registerForEvent(event.id, values);
+      if (response.success) {
+        setIsRegistered(true);
+        setShowRegistrationForm(false);
+        toast.success('Successfully registered for event');
+        fetchEvent();
+      }
+    } catch (error) {
+      console.error('Registration failed:', error);
+      toast.error('Registration failed');
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  if (loading) {
+    return <EventDetailSkeleton />;
+  }
+
   if (!event) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Event Not Found</h1>
+          <Button onClick={() => router.push('/events')}>Back to Events</Button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
-      <Navbar user={user} onLogout={() => setUser(null)} />
+      <Navbar user={user} onLogout={logout} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-3 gap-8">
@@ -182,75 +248,58 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                 </p>
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Number of Seats
-                </label>
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => setSeats(Math.max(1, seats - 1))}
-                    className="w-12 h-12 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700 transition-colors"
-                  >
-                    -
-                  </button>
-                  <span className="text-2xl font-bold text-gray-900 w-12 text-center">
-                    {seats}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setSeats(Math.min(event.availableSeats, seats + 1))
-                    }
-                    className="w-12 h-12 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-700 transition-colors"
-                  >
-                    +
-                  </button>
+              {isRegistered && (
+                <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-200">
+                  <p className="text-green-800 font-medium text-center">
+                    ✓ You are registered for this event
+                  </p>
                 </div>
-              </div>
-
-              <div className="mb-6 p-4 bg-purple-50 rounded-xl">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-700">Subtotal</span>
-                  <span className="font-semibold text-gray-900">
-                    ${event.price * seats}
-                  </span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-700">Service Fee</span>
-                  <span className="font-semibold text-gray-900">
-                    ${(event.price * seats * 0.1).toFixed(2)}
-                  </span>
-                </div>
-                <div className="border-t border-purple-200 pt-2 mt-2">
-                  <div className="flex justify-between">
-                    <span className="font-bold text-gray-900">Total</span>
-                    <span className="font-bold text-purple-600 text-xl">
-                      ${(event.price * seats * 1.1).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              )}
 
               <Button
-                variant="primary"
+                variant={event.availableSeats === 0 ? "ghost" : isRegistered ? "secondary" : "primary"}
                 className="w-full mb-4"
                 size="lg"
-                onClick={handleBooking}
+                onClick={handleRegistrationClick}
+                disabled={registering || event.availableSeats === 0}
               >
-                Book Now
+                {registering ? 'Processing...' : event.availableSeats === 0 ? 'Event Full - No Seats Available' : isRegistered ? 'Unregister' : 'Register for Event'}
               </Button>
 
               <div className="text-center">
                 <p className="text-sm text-gray-500">
-                  <span className="font-semibold text-green-600">
-                    {event.availableSeats}
-                  </span>{" "}
-                  seats available
+                  {event.availableSeats === 0 ? (
+                    <span className="font-semibold text-red-600">
+                      Event is fully booked
+                    </span>
+                  ) : (
+                    <>
+                      <span className={`font-semibold ${
+                        event.availableSeats < 10 ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {event.availableSeats}
+                      </span>{" "}
+                      seats available
+                    </>
+                  )}
                 </p>
               </div>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Registration Form Modal */}
+      {user && event && (
+        <EventRegistrationForm
+          event={event}
+          user={user}
+          isOpen={showRegistrationForm}
+          onClose={() => setShowRegistrationForm(false)}
+          onSubmit={handleRegistrationSubmit}
+          loading={registering}
+        />
+      )}
     </div>
   );
 }

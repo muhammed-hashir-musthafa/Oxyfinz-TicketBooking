@@ -1,70 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
-import { Event, User } from "@/types";
+import { Event } from "@/types";
 import { Button } from "@/components/base/ui/Button";
 import { EventCard } from "@/components/base/ui/EventCard";
 import { Navbar } from "@/components/base/ui/Navbar";
-
-const MOCK_FEATURED: Event[] = [
-  {
-    id: "1",
-    title: "Summer Music Festival 2024",
-    description:
-      "Join us for an unforgettable night of live music featuring top artists from around the world.",
-    date: "2024-07-15",
-    time: "18:00",
-    venue: "Central Park Arena",
-    category: "Music",
-    price: 89,
-    image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800",
-    availableSeats: 450,
-    totalSeats: 500,
-    organizer: "EventPro Inc.",
-  },
-  {
-    id: "2",
-    title: "Tech Innovation Summit",
-    description:
-      "Explore the latest in AI, blockchain, and emerging technologies with industry leaders.",
-    date: "2024-08-20",
-    time: "09:00",
-    venue: "Convention Center",
-    category: "Technology",
-    price: 150,
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800",
-    availableSeats: 200,
-    totalSeats: 300,
-    organizer: "TechWorld",
-  },
-  {
-    id: "3",
-    title: "Food & Wine Experience",
-    description:
-      "Savor exquisite dishes and premium wines from renowned chefs and wineries.",
-    date: "2024-09-10",
-    time: "17:00",
-    venue: "Riverside Garden",
-    category: "Food",
-    price: 120,
-    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800",
-    availableSeats: 150,
-    totalSeats: 200,
-    organizer: "Culinary Masters",
-  },
-];
+import { EventCardSkeleton } from "@/components/base/ui/Skeleton";
+import { useAuth } from "@/context/AuthContext";
+import { eventService } from "@/services";
 
 export default function HomePage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useAuth();
+  const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Initialize with mock data so we don't call setState inside an effect synchronously.
-  const [featuredEvents] = useState<Event[]>(MOCK_FEATURED);
+  useEffect(() => {
+    const fetchFeaturedEvents = async () => {
+      try {
+        const response = await eventService.getEvents({ limit: 6 });
+        if (response.success) {
+          setFeaturedEvents(response.data.events);
+        }
+      } catch (error) {
+        console.error('Failed to fetch events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedEvents();
+  }, []);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
-      <Navbar user={user} onLogout={() => setUser(null)} />
+      <Navbar user={user} onLogout={logout} />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
@@ -137,9 +108,19 @@ export default function HomePage() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featuredEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
+          {loading ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <EventCardSkeleton key={index} />
+            ))
+          ) : featuredEvents.length > 0 ? (
+            featuredEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8">
+              <p className="text-gray-600">No events available at the moment.</p>
+            </div>
+          )}
         </div>
       </section>
 
