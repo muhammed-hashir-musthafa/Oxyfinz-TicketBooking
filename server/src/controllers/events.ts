@@ -199,6 +199,31 @@ export const getRegisteredEvents = async (req: Request, res: Response) => {
   }
 };
 
+export const getEventRegisteredUsers = async (req: Request, res: Response) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate("registeredUsers", "name email avatar createdAt")
+      .select("title registeredUsers capacity");
+
+    if (!event) {
+      return errorResponse(res, 404, "Event not found");
+    }
+
+    return successResponse(res, "Event registered users retrieved successfully", {
+      event: {
+        id: event._id,
+        title: event.title,
+        capacity: event.capacity,
+        registeredCount: event.registeredUsers.length,
+        users: event.registeredUsers
+      }
+    });
+  } catch (error) {
+    console.error("Get event registered users error:", error);
+    return errorResponse(res, 500, "Internal server error", error);
+  }
+};
+
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     if (req.user?.role !== "admin") {

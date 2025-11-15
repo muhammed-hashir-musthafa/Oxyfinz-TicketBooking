@@ -9,6 +9,7 @@ import {
   unregisterFromEvent,
   getMyEvents,
   getRegisteredEvents,
+  getEventRegisteredUsers,
   getAllUsers,
 } from "../controllers/events";
 import { authenticate, authorize } from "../middlewares/auth";
@@ -33,6 +34,7 @@ router.get("/user/my-events", getMyEvents);
 router.get("/user/registered", getRegisteredEvents);
 
 // Admin routes
+router.get("/:id/registered-users", getEventRegisteredUsers);
 router.get("/admin/users", authorize("admin"), getAllUsers);
 
 export default router;
