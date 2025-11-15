@@ -1,0 +1,229 @@
+"use client";
+
+import React, { useState } from "react";
+import { Navbar } from "@/components/base/ui/Navbar";
+import { Card } from "@/components/base/ui/Card";
+import { User, DashboardStats } from "@/types";
+
+type Activity =
+  | { id: number; type: "booking"; user: string; event: string; time: string }
+  | { id: number; type: "user"; user: string; action: string; time: string }
+  | { id: number; type: "event"; event: string; action: string; time: string };
+
+export default function AdminDashboardPage() {
+  const [user] = useState<User>({
+    id: "1",
+    name: "Admin User",
+    email: "admin@tickethub.com",
+    role: "admin",
+    createdAt: "2023-01-01",
+  });
+
+  // initialize stats directly
+  const [stats] = useState<DashboardStats>({
+    totalEvents: 48,
+    totalUsers: 1234,
+    totalBookings: 892,
+    revenue: 145680,
+  });
+
+  // typed recent activity, initialized directly (no effect)
+  const [recentActivity] = useState<Activity[]>([
+    {
+      id: 1,
+      type: "booking",
+      user: "John Doe",
+      event: "Summer Music Festival",
+      time: "2 hours ago",
+    },
+    {
+      id: 2,
+      type: "user",
+      user: "Jane Smith",
+      action: "New registration",
+      time: "4 hours ago",
+    },
+    {
+      id: 3,
+      type: "event",
+      event: "Tech Summit 2024",
+      action: "Event created",
+      time: "5 hours ago",
+    },
+    {
+      id: 4,
+      type: "booking",
+      user: "Mike Johnson",
+      event: "Food Festival",
+      time: "6 hours ago",
+    },
+  ]);
+
+  const statCards = [
+    {
+      title: "Total Events",
+      value: stats.totalEvents,
+      icon: "🎫",
+      color: "from-purple-500 to-pink-500",
+      change: "+12%",
+    },
+    {
+      title: "Total Users",
+      value: stats.totalUsers,
+      icon: "👥",
+      color: "from-blue-500 to-cyan-500",
+      change: "+8%",
+    },
+    {
+      title: "Total Bookings",
+      value: stats.totalBookings,
+      icon: "📊",
+      color: "from-green-500 to-emerald-500",
+      change: "+15%",
+    },
+    {
+      title: "Revenue",
+      value: `$${stats.revenue.toLocaleString()}`,
+      icon: "💰",
+      color: "from-orange-500 to-red-500",
+      change: "+23%",
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
+      <Navbar user={user} onLogout={() => {}} />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-10">
+          <h1 className="text-5xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <p className="text-gray-600 text-lg">Welcome back, {user.name}</p>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {statCards.map((stat, index) => (
+            <Card key={index} className="p-6 hover:shadow-xl transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <div
+                  className={`w-14 h-14 bg-linear-to-r ${stat.color} rounded-2xl flex items-center justify-center text-3xl`}
+                >
+                  {stat.icon}
+                </div>
+                <span className="text-green-600 text-sm font-semibold bg-green-50 px-3 py-1 rounded-full">
+                  {stat.change}
+                </span>
+              </div>
+              <h3 className="text-gray-600 text-sm font-medium mb-1">
+                {stat.title}
+              </h3>
+              <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Recent Activity */}
+          <div className="lg:col-span-2">
+            <Card className="p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Recent Activity
+              </h2>
+              <div className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
+                        activity.type === "booking"
+                          ? "bg-purple-100"
+                          : activity.type === "user"
+                          ? "bg-blue-100"
+                          : "bg-green-100"
+                      }`}
+                    >
+                      {activity.type === "booking"
+                        ? "🎫"
+                        : activity.type === "user"
+                        ? "👤"
+                        : "📅"}
+                    </div>
+
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">
+                        {("user" in activity && activity.user) ||
+                          ("event" in activity && activity.event)}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {"event" in activity
+                          ? `Booked ${activity.event}`
+                          : "action" in activity
+                          ? activity.action
+                          : ""}
+                      </p>
+                    </div>
+
+                    <span className="text-sm text-gray-500">
+                      {activity.time}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="lg:col-span-1">
+            <Card className="p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Quick Actions
+              </h2>
+              <div className="space-y-3">
+                <a href="/admin/events/add" className="block">
+                  <div className="p-4 bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all cursor-pointer">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">➕</span>
+                      <span className="font-semibold">Create New Event</span>
+                    </div>
+                  </div>
+                </a>
+                <a href="/admin/events" className="block">
+                  <div className="p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 transition-all cursor-pointer">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">📋</span>
+                      <span className="font-semibold text-gray-900">
+                        Manage Events
+                      </span>
+                    </div>
+                  </div>
+                </a>
+                <a href="/admin/users" className="block">
+                  <div className="p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 transition-all cursor-pointer">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">👥</span>
+                      <span className="font-semibold text-gray-900">
+                        View Users
+                      </span>
+                    </div>
+                  </div>
+                </a>
+                <a href="/admin/reports" className="block">
+                  <div className="p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 transition-all cursor-pointer">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">📊</span>
+                      <span className="font-semibold text-gray-900">
+                        View Reports
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
