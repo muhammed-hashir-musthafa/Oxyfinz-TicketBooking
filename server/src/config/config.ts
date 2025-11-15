@@ -14,6 +14,11 @@ const config = {
     secret: process.env.JWT_SECRET || "fallback-secret",
     expiresIn: process.env.JWT_EXPIRES_IN || "7d",
   },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+    apiKey: process.env.CLOUDINARY_API_KEY || "",
+    apiSecret: process.env.CLOUDINARY_API_SECRET || "",
+  },
 //   aws: {
 //     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
 //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
