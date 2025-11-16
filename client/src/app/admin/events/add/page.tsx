@@ -3,33 +3,44 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/base/ui/Card";
+import { Navbar } from "@/components/base/ui/Navbar";
 import EventForm from "@/components/admin/forms/EventForm";
+import { useAuth } from "@/context/AuthContext";
+import { eventService } from "@/services";
+import toast from "react-hot-toast";
 
 const AddEvent = () => {
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (values: {
+  interface EventFormData {
     title: string;
     description: string;
     date: string;
     time: string;
-    venue: string;
+    location: string;
     category: string;
     price: number;
-    totalSeats: number;
+    capacity: number;
     image: string;
-    organizer: string;
-  }) => {
+  }
+
+  const handleSubmit = async (values: EventFormData) => {
     setLoading(true);
     try {
-      // Mock save - replace with API call
-      console.log("Creating event:", values);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert("Event created successfully!");
-      router.push("/admin/events");
+      const eventData = {
+        ...values,
+        organizer: user?.name || 'Unknown'
+      };
+      const response = await eventService.createEvent(eventData);
+      if (response.success) {
+        toast.success('Event created successfully!');
+        router.push("/admin/events");
+      }
     } catch (error) {
       console.error("Error creating event:", error);
+      toast.error('Failed to create event');
     } finally {
       setLoading(false);
     }
@@ -40,10 +51,11 @@ const AddEvent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
+      <Navbar user={user} onLogout={logout} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-5xl font-bold text-gray-900 mb-2">
             Create New Event
           </h1>
           <p className="text-gray-600">

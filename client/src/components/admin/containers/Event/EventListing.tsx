@@ -9,6 +9,7 @@ import { Event } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services";
 import { TableRowSkeleton } from "@/components/base/ui/Skeleton";
+import { formatDate } from "@/lib/dateUtils";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -41,7 +42,7 @@ export default function AdminEventsPage() {
       try {
         const response = await eventService.deleteEvent(id);
         if (response.success) {
-          setEvents((prev) => prev.filter((e) => e.id !== id));
+          setEvents((prev) => prev.filter((e) => (e.id || e._id) !== id));
           toast.success('Event deleted successfully');
         }
       } catch (error) {
@@ -118,7 +119,7 @@ export default function AdminEventsPage() {
                 ) : (
                   filteredEvents.map((event) => (
                     <tr
-                      key={event.id}
+                      key={event.id || event._id}
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4">
@@ -126,7 +127,7 @@ export default function AdminEventsPage() {
                           <Image
                             width={64}
                             height={64}
-                            src={event.image || '/placeholder.jpg'}
+                            src={event.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=128&h=128&fit=crop&crop=center'}
                             alt={event.title}
                             className="w-16 h-16 rounded-lg object-cover"
                           />
@@ -134,7 +135,7 @@ export default function AdminEventsPage() {
                             <p className="font-semibold text-gray-900">
                               {event.title}
                             </p>
-                            <p className="text-sm text-gray-600">{event.venue}</p>
+                            <p className="text-sm text-gray-600">{event.location || event.venue}</p>
                           </div>
                         </div>
                       </td>
@@ -143,24 +144,24 @@ export default function AdminEventsPage() {
                           {event.category}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-700">{event.date}</td>
+                      <td className="px-6 py-4 text-gray-700">{formatDate(event.date)}</td>
                       <td className="px-6 py-4 text-gray-900 font-semibold">
                         ${event.price}
                       </td>
                       <td className="px-6 py-4">
                         <span
                           className={`font-medium ${
-                            event.availableSeats < 50
+                            (event.capacity - (event.registeredUsers?.length || 0)) < 50
                               ? "text-red-600"
                               : "text-green-600"
                           }`}
                         >
-                          {event.availableSeats}/{event.totalSeats}
+                          {event.capacity - (event.registeredUsers?.length || 0)}/{event.capacity}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
-                          <Link href={`/admin/events/${event.id}`}>
+                          <Link href={`/admin/events/${event.id || event._id}`}>
                             <Button variant="ghost" size="sm">
                               Edit
                             </Button>
@@ -168,7 +169,7 @@ export default function AdminEventsPage() {
                           <Button
                             variant="danger"
                             size="sm"
-                            onClick={() => handleDelete(event.id)}
+                            onClick={() => handleDelete(event.id || event._id || '')}
                           >
                             Delete
                           </Button>
