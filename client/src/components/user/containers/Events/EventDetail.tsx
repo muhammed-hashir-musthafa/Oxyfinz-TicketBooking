@@ -105,34 +105,10 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
     }
   };
 
-  const handleRegistrationSubmit = async (values: {
-    name: string;
-    email: string;
-    phone: string;
-    emergencyContact: string;
-    specialRequirements?: string;
-  }) => {
-    if (!event) return;
-
-    setRegistering(true);
-    try {
-      const response = await eventService.registerForEvent(event.id || event._id || '', values);
-      if (response.success) {
-        setIsRegistered(true);
-        setShowRegistrationForm(false);
-        toast.success('Successfully registered for event');
-        fetchEvent();
-      }
-    } catch (error) {
-      console.error('Registration failed:', error);
-      const message = error && typeof error === 'object' && 'response' in error && 
-        error.response && typeof error.response === 'object' && 'data' in error.response &&
-        error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data
-        ? String(error.response.data.message) : 'Registration failed';
-      toast.error(message);
-    } finally {
-      setRegistering(false);
-    }
+  const handleRegistrationSuccess = () => {
+    setIsRegistered(true);
+    setShowRegistrationForm(false);
+    fetchEvent();
   };
 
   if (loading) {
@@ -325,7 +301,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
           user={user}
           isOpen={showRegistrationForm}
           onClose={() => setShowRegistrationForm(false)}
-          onSubmit={handleRegistrationSubmit}
+          onSuccess={handleRegistrationSuccess}
           loading={registering}
         />
       )}
