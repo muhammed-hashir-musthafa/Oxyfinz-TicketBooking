@@ -7,10 +7,10 @@ interface EventPayload {
   description: string;
   date: string;
   time: string;
-  venue: string;
+  location: string;
   category: string;
   price: number;
-  totalSeats: number;
+  capacity: number;
   image?: string;
   organizer: string;
 }
