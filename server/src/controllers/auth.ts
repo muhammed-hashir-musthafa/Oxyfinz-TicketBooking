@@ -105,6 +105,11 @@ export const getProfile = async (req: Request, res: Response) => {
         email: user.email,
         role: user.role,
         avatar: user.avatar,
+        phone: user.phone,
+        emergencyContact: user.emergencyContact,
+        specialRequirements: user.specialRequirements,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
     });
   } catch (error) {
