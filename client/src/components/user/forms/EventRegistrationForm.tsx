@@ -6,6 +6,7 @@ import * as Yup from 'yup';
 import { X } from 'lucide-react';
 import { Button } from '@/components/base/ui/Button';
 import { Input } from '@/components/base/ui/Input';
+import { formatDateTime } from '@/lib/dateUtils';
 import { Event, User } from '@/types';
 
 const registrationSchema = Yup.object().shape({
@@ -67,8 +68,8 @@ const EventRegistrationForm: React.FC<EventRegistrationFormProps> = ({
 
           <div className="mb-6 p-4 bg-purple-50 rounded-xl">
             <h3 className="font-semibold text-purple-900">{event.title}</h3>
-            <p className="text-sm text-purple-700">{event.date} at {event.time}</p>
-            <p className="text-sm text-purple-700">{event.venue}</p>
+            <p className="text-sm text-purple-700">{formatDateTime(event.date, event.time)}</p>
+            <p className="text-sm text-purple-700">{event.location || event.venue}</p>
           </div>
 
           <Formik

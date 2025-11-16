@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Event } from "@/types";
 import { Card } from "./Card";
+import { formatDateTime } from "@/lib/dateUtils";
 import Image from "next/image";
 
 interface EventCardProps {
@@ -10,13 +11,13 @@ interface EventCardProps {
 
 export const EventCard: React.FC<EventCardProps> = ({ event }) => {
   return (
-    <Link href={`/events/${event.id}`}>
+    <Link href={`/events/${event.id || event._id}`}>
       <Card hover className="overflow-hidden cursor-pointer">
         <div className="relative h-56 overflow-hidden">
           <Image
             width={500}
             height={300}
-            src={event.image}
+            src={event.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=600&fit=crop&crop=center'}
             alt={event.title}
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
           />
@@ -49,7 +50,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              {event.date} at {event.time}
+              {formatDateTime(event.date, event.time)}
             </div>
 
             <div className="flex items-center text-gray-700 text-sm">
@@ -72,7 +73,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              {event.venue}
+              {event.location || event.venue}
             </div>
           </div>
 
@@ -86,7 +87,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
             <div className="text-right">
               <p className="text-sm text-gray-500">Available</p>
               <p className="text-lg font-semibold text-gray-900">
-                {event.availableSeats} seats
+                {event.capacity - (event.registeredUsers?.length || 0)} seats
               </p>
             </div>
           </div>
