@@ -33,8 +33,8 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
       if (response.success) {
         setEvent(response.data.event);
         // Check if user is already registered
-        console.log('User:', user);
-        console.log('Registered Users:', response.data.event.registeredUsers);
+        // console.log('User:', user);
+        // console.log('Registered Users:', response.data.event.registeredUsers);
         
         let isUserRegistered = false;
         if (user && response.data.event.registeredUsers) {
