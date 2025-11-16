@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -13,10 +13,8 @@ import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services";
 import toast from "react-hot-toast";
 
-export default function HomePage() {
-  const { user, logout } = useAuth();
-  const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
+// Component to handle search params with Suspense
+const SearchParamsHandler: React.FC = () => {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -25,6 +23,14 @@ export default function HomePage() {
       toast.error(error);
     }
   }, [searchParams]);
+
+  return null;
+};
+
+export default function HomePage() {
+  const { user, logout } = useAuth();
+  const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFeaturedEvents = async () => {
@@ -45,6 +51,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
+      <Suspense fallback={null}>
+        <SearchParamsHandler />
+      </Suspense>
       <Navbar user={user} onLogout={logout} />
 
       {/* Hero Section */}
