@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import {  X, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import uploadService from '@/services/uploadService';
+import toast from 'react-hot-toast';
 
 interface ImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
+  onUploadStatusChange?: (uploading: boolean) => void;
   error?: string;
   label?: string;
 }
@@ -15,6 +17,7 @@ interface ImageUploadProps {
 const ImageUpload: React.FC<ImageUploadProps> = ({
   value,
   onChange,
+  onUploadStatusChange,
   error,
   label = 'Event Image',
 }) => {
@@ -34,18 +37,20 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
     // Upload to server
     setUploading(true);
+    onUploadStatusChange?.(true);
     try {
-      // console.log(file, 'selected for upload');
       const response = await uploadService.uploadImage(file);
-      // console.log(response, 'upload response');
       if (response.success) {
         onChange(response.data.imageUrl);
+        toast.success('Image uploaded successfully!');
       }
     } catch (error) {
       console.error('Upload failed:', error);
+      toast.error('Image upload failed. Please try again.');
       setPreview(''); // Reset preview on error
     } finally {
       setUploading(false);
+      onUploadStatusChange?.(false);
     }
   };
 
