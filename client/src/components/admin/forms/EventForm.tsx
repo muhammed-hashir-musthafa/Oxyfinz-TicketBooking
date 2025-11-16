@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Formik, Form, Field, FieldProps } from 'formik';
 import * as Yup from 'yup';
 import { Button } from '@/components/base/ui/Button';
@@ -59,6 +59,7 @@ const EventForm: React.FC<EventFormProps> = ({
   isNew = true,
   loading = false,
 }) => {
+  const [imageUploading, setImageUploading] = useState(false);
   const defaultValues: EventFormValues = {
     title: '',
     description: '',
@@ -212,6 +213,7 @@ const EventForm: React.FC<EventFormProps> = ({
               <ImageUpload
                 value={field.value}
                 onChange={(url) => form.setFieldValue('image', url)}
+                onUploadStatusChange={setImageUploading}
                 error={touched.image && errors.image ? errors.image : ''}
               />
             )}
@@ -225,9 +227,9 @@ const EventForm: React.FC<EventFormProps> = ({
               variant="primary"
               size="lg"
               className="flex-1"
-              disabled={isSubmitting || loading}
+              disabled={isSubmitting || loading || imageUploading}
             >
-              {isNew ? 'Create Event' : 'Update Event'}
+              {imageUploading ? 'Uploading Image...' : isNew ? 'Create Event' : 'Update Event'}
             </Button>
 
             {!isNew && onDelete && (
