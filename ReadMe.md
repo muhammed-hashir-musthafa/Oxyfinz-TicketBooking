@@ -68,7 +68,7 @@ A modern, full-stack event management platform built with Next.js, Express.js, a
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/oxyfinz-events.git
+git clone https://github.com/muhammed-hashir-musthafa/oxyfinz-events.git
 cd oxyfinz-events
 ```
 
@@ -161,22 +161,8 @@ oxyfinz-events/
 ### Admin
 - `GET /api/events/admin/users` - Get all users (admin only)
 
-## 🧪 Testing
-
-### Backend Tests
-```bash
-cd server
-npm test
-```
-
-### Frontend Tests
-```bash
-cd client
-npm test
-```
-
 ## 🚀 Deployment
- 
+
  
 ### Build Commands
 ```bash
