@@ -76,7 +76,7 @@ export default function AdminEventDetailPage({ eventId }: AdminEventDetailPagePr
           router.push('/admin/events');
         }
       } else {
-        console.log('Updating event with ID:', eventId, 'Data:', eventData);
+        // console.log('Updating event with ID:', eventId, 'Data:', eventData);
         const response = await eventService.updateEvent(eventId, eventData);
         if (response.success) {
           toast.success('Event updated successfully!');
