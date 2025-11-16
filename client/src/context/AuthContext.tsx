@@ -29,6 +29,7 @@ interface AuthContextType {
   login: (email: string, password: string, role: 'user' | 'admin') => Promise<void>;
   register: (name: string, email: string, password: string, role?: string) => Promise<void>;
   logout: () => void;
+  getProfile: () => Promise<void>;
   loading: boolean;
 }
 
@@ -101,7 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (userData.role === 'admin') {
           router.push('/admin');
         } else {
-          router.push('/dashboard');
+          router.push('/');
         }
       } else {
         throw new Error(response.message || 'Login failed');
@@ -133,7 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (userData.role === 'admin') {
           router.push('/admin');
         } else {
-          router.push('/dashboard');
+          router.push('/');
         }
       } else {
         throw new Error(response.message || 'Registration failed');
@@ -145,6 +146,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw error;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getProfile = async () => {
+    try {
+      const response = await authService.getProfile();
+      if (response.success && response.data) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      console.error('Get profile error:', error);
+      toast.error('Failed to refresh profile');
     }
   };
 
@@ -179,6 +192,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    getProfile,
     loading,
   };
 
