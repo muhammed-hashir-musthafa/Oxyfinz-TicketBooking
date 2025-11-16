@@ -60,7 +60,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
-            <h1 className="text-6xl md:text-7xl font-bold mb-6">
+            <h1 className="text-4xl md:text-7xl font-bold mb-6">
               <span className="bg-linear-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
                 Discover Amazing
               </span>
