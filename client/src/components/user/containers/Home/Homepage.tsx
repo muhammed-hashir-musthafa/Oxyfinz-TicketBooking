@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { Event } from "@/types";
 import { Button } from "@/components/base/ui/Button";
@@ -10,11 +11,20 @@ import { Navbar } from "@/components/base/ui/Navbar";
 import { EventCardSkeleton } from "@/components/base/ui/Skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services";
+import toast from "react-hot-toast";
 
 export default function HomePage() {
   const { user, logout } = useAuth();
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error) {
+      toast.error(error);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchFeaturedEvents = async () => {
@@ -60,15 +70,6 @@ export default function HomePage() {
                   className="w-full sm:w-auto"
                 >
                   Explore Events
-                </Button>
-              </Link>
-              <Link href="/signup">
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="w-full sm:w-auto"
-                >
-                  Create Account
                 </Button>
               </Link>
             </div>
