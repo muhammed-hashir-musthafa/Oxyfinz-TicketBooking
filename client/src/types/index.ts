@@ -13,18 +13,28 @@ export interface User {
 
 export interface Event {
   id: string;
+  _id?: string;
   title: string;
   description: string;
   date: string;
   time: string;
-  venue: string;
+  location: string;
+  venue?: string; // For backward compatibility
   category: string;
   price: number;
-  image: string;
-  availableSeats: number;
-  totalSeats: number;
-  organizer: string;
-  registeredUsers?: string[];
+  image?: string;
+  capacity: number;
+  availableSeats?: number;
+  totalSeats?: number;
+  registeredUsers?: (string | { _id: string; id: string; name?: string })[];
+  organizer: string | {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  status?: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Booking {
