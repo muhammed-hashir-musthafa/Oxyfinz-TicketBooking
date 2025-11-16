@@ -18,16 +18,16 @@ const eventSchema = Yup.object().shape({
     .required('Description is required'),
   date: Yup.date().required('Date is required'),
   time: Yup.string().required('Time is required'),
-  venue: Yup.string().required('Venue is required'),
+  location: Yup.string().required('Location is required'),
   category: Yup.string().required('Category is required'),
   price: Yup.number()
     .min(0, 'Price must be positive')
     .required('Price is required').typeError('Price must be a number'),
-  totalSeats: Yup.number()
-    .min(1, 'Total seats must be at least 1')
-    .required('Total seats is required').typeError('Total seats must be a number'),
+  capacity: Yup.number()
+    .min(1, 'Capacity must be at least 1')
+    .required('Capacity is required').typeError('Capacity must be a number'),
   image: Yup.string().optional(),
-  organizer: Yup.string().required('Organizer is required'),
+
 });
 
 interface EventFormValues {
@@ -35,12 +35,11 @@ interface EventFormValues {
   description: string;
   date: string;
   time: string;
-  venue: string;
+  location: string;
   category: string;
   price: number;
-  totalSeats: number;
+  capacity: number;
   image: string;
-  organizer: string;
 }
 
 interface EventFormProps {
@@ -65,22 +64,23 @@ const EventForm: React.FC<EventFormProps> = ({
     description: '',
     date: '',
     time: '',
-    venue: '',
-    category: 'Music',
+    location: '',
+    category: 'conference',
     price: 0,
-    totalSeats: 0,
+    capacity: 0,
     image: '',
-    organizer: '',
     ...initialValues,
   };
 
   const categories = [
-    'Music',
-    'Sports',
-    'Technology',
-    'Food',
-    'Art',
-    'Business',
+    'conference',
+    'workshop', 
+    'seminar',
+    'networking',
+    'social',
+    'sports',
+    'cultural',
+    'other'
   ];
 
   return (
@@ -170,13 +170,13 @@ const EventForm: React.FC<EventFormProps> = ({
             </Field>
           </div>
 
-          <Field name="venue">
+          <Field name="location">
             {({ field }: FieldProps) => (
               <Input
                 {...field}
-                label="Venue"
+                label="Location"
                 placeholder="e.g. Central Park Arena"
-                error={touched.venue && errors.venue ? errors.venue : ''}
+                error={touched.location && errors.location ? errors.location : ''}
               />
             )}
           </Field>
@@ -194,14 +194,14 @@ const EventForm: React.FC<EventFormProps> = ({
               )}
             </Field>
 
-            <Field name="totalSeats">
+            <Field name="capacity">
               {({ field }: FieldProps) => (
                 <Input
                   {...field}
                   type="text"
-                  label="Total Seats"
+                  label="Capacity"
                   placeholder="100"
-                  error={touched.totalSeats && errors.totalSeats ? errors.totalSeats : ''}
+                  error={touched.capacity && errors.capacity ? errors.capacity : ''}
                 />
               )}
             </Field>
@@ -217,16 +217,7 @@ const EventForm: React.FC<EventFormProps> = ({
             )}
           </Field>
 
-          <Field name="organizer">
-            {({ field }: FieldProps) => (
-              <Input
-                {...field}
-                label="Organizer"
-                placeholder="Event Company Name"
-                error={touched.organizer && errors.organizer ? errors.organizer : ''}
-              />
-            )}
-          </Field>
+
 
           <div className="flex gap-4 pt-6">
             <Button

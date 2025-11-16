@@ -35,7 +35,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     // Upload to server
     setUploading(true);
     try {
+      // console.log(file, 'selected for upload');
       const response = await uploadService.uploadImage(file);
+      // console.log(response, 'upload response');
       if (response.success) {
         onChange(response.data.imageUrl);
       }
