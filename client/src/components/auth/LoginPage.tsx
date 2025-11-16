@@ -1,11 +1,22 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Card } from "@/components/base/ui/Card";
 import LoginForm from "@/components/base/forms/LoginForm";
+import toast from "react-hot-toast";
 
 const LoginPage: React.FC = () => {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message) {
+      toast.error(message);
+    }
+  }, [searchParams]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-s px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
