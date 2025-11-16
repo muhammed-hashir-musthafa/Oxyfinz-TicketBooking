@@ -1,4 +1,4 @@
-# Oxyfinz Events - Event Management Platform
+# Oxyfinz Events - Event Management Platform 
 
 A modern, full-stack event management platform built with Next.js, Express.js, and MongoDB. Discover, create, and manage events with ease.
 
