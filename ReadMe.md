@@ -1,8 +1,5 @@
 # Oxyfinz Events - Event Management Platform
 
-[![Node.js CI](https://github.com/yourusername/oxyfinz-events/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/oxyfinz-events/actions/workflows/ci.yml)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-
 A modern, full-stack event management platform built with Next.js, Express.js, and MongoDB. Discover, create, and manage events with ease.
 
 ## 🚀 Features
