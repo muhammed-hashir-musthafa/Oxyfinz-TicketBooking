@@ -12,12 +12,15 @@ import { TableRowSkeleton } from "@/components/base/ui/Skeleton";
 import { formatDate } from "@/lib/dateUtils";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import RegisteredUsersModal from "@/components/admin/ui/RegisteredUsersModal";
 
 export default function AdminEventsPage() {
   const { user, logout } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showUsersModal, setShowUsersModal] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -50,6 +53,11 @@ export default function AdminEventsPage() {
         toast.error('Failed to delete event');
       }
     }
+  };
+
+  const handleViewUsers = (event: Event) => {
+    setSelectedEvent(event);
+    setShowUsersModal(true);
   };
 
   const filteredEvents = useMemo(
@@ -161,6 +169,13 @@ export default function AdminEventsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleViewUsers(event)}
+                          >
+                            View
+                          </Button>
                           <Link href={`/admin/events/${event.id || event._id}`}>
                             <Button variant="ghost" size="sm">
                               Edit
@@ -189,6 +204,19 @@ export default function AdminEventsPage() {
           </div>
         )}
       </div>
+
+      {/* Registered Users Modal */}
+      {selectedEvent && (
+        <RegisteredUsersModal
+          isOpen={showUsersModal}
+          onClose={() => {
+            setShowUsersModal(false);
+            setSelectedEvent(null);
+          }}
+          eventId={selectedEvent.id || selectedEvent._id || ''}
+          eventTitle={selectedEvent.title}
+        />
+      )}
     </div>
   );
 }
