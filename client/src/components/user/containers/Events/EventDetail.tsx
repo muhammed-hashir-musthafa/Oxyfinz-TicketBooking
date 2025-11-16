@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services";
 import EventRegistrationForm from "@/components/user/forms/EventRegistrationForm";
 import { EventDetailSkeleton } from "@/components/base/ui/Skeleton";
+import { formatDateTime } from "@/lib/dateUtils";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -32,13 +33,28 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
       if (response.success) {
         setEvent(response.data.event);
         // Check if user is already registered
-        if (user && response.data.event.registeredUsers?.includes(user.id)) {
-          setIsRegistered(true);
+        console.log('User:', user);
+        console.log('Registered Users:', response.data.event.registeredUsers);
+        
+        let isUserRegistered = false;
+        if (user && response.data.event.registeredUsers) {
+          // Check if user ID matches any registered user ID
+          isUserRegistered = response.data.event.registeredUsers.some(registeredUserId => {
+            const userId = typeof registeredUserId === 'string' ? registeredUserId : registeredUserId._id || registeredUserId.id;
+            return userId === user.id;
+          });
         }
+        
+        console.log('Is User Registered:', isUserRegistered);
+        setIsRegistered(isUserRegistered);
       }
     } catch (error) {
       console.error('Failed to fetch event:', error);
-      toast.error('Failed to load event');
+      const message = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data
+        ? String(error.response.data.message) : 'Failed to load event';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -49,6 +65,13 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
       fetchEvent();
     }
   }, [eventId, fetchEvent]);
+
+  // Reset registration status when user changes
+  useEffect(() => {
+    if (!user) {
+      setIsRegistered(false);
+    }
+  }, [user]);
 
   const handleRegistrationClick = () => {
     if (!user) {
@@ -68,7 +91,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
 
     setRegistering(true);
     try {
-      const response = await eventService.unregisterFromEvent(event.id);
+      const response = await eventService.unregisterFromEvent(event.id || event._id || '');
       if (response.success) {
         setIsRegistered(false);
         toast.success('Successfully unregistered from event');
@@ -93,7 +116,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
 
     setRegistering(true);
     try {
-      const response = await eventService.registerForEvent(event.id, values);
+      const response = await eventService.registerForEvent(event.id || event._id || '', values);
       if (response.success) {
         setIsRegistered(true);
         setShowRegistrationForm(false);
@@ -102,7 +125,11 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
       }
     } catch (error) {
       console.error('Registration failed:', error);
-      toast.error('Registration failed');
+      const message = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data
+        ? String(error.response.data.message) : 'Registration failed';
+      toast.error(message);
     } finally {
       setRegistering(false);
     }
@@ -135,7 +162,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
               <Image
                 width={1200}
                 height={800}
-                src={event.image}
+                src={event.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=800&fit=crop&crop=center'}
                 alt={event.title}
                 className="w-full h-full object-cover"
               />
@@ -182,7 +209,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                   <div>
                     <p className="font-semibold text-gray-900">Date & Time</p>
                     <p className="text-gray-600">
-                      {event.date} at {event.time}
+                      {formatDateTime(event.date, event.time)}
                     </p>
                   </div>
                 </div>
@@ -210,7 +237,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                   </svg>
                   <div>
                     <p className="font-semibold text-gray-900">Venue</p>
-                    <p className="text-gray-600">{event.venue}</p>
+                    <p className="text-gray-600">{event.location || event.venue}</p>
                   </div>
                 </div>
 
@@ -231,7 +258,9 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                   </svg>
                   <div>
                     <p className="font-semibold text-gray-900">Organizer</p>
-                    <p className="text-gray-600">{event.organizer}</p>
+                    <p className="text-gray-600">
+                      {typeof event.organizer === 'string' ? event.organizer : event.organizer.name}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -247,7 +276,7 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
                   ${event.price}
                 </p>
               </div>
-
+              
               {isRegistered && (
                 <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-200">
                   <p className="text-green-800 font-medium text-center">
@@ -257,27 +286,27 @@ export default function EventDetailPage({ eventId }: EventDetailPageProps) {
               )}
 
               <Button
-                variant={event.availableSeats === 0 ? "ghost" : isRegistered ? "secondary" : "primary"}
+                variant={isRegistered ? "secondary" : (event.capacity - (event.registeredUsers?.length || 0)) === 0 ? "ghost" : "primary"}
                 className="w-full mb-4"
                 size="lg"
                 onClick={handleRegistrationClick}
-                disabled={registering || event.availableSeats === 0}
+                disabled={registering || (!isRegistered && (event.capacity - (event.registeredUsers?.length || 0)) === 0)}
               >
-                {registering ? 'Processing...' : event.availableSeats === 0 ? 'Event Full - No Seats Available' : isRegistered ? 'Unregister' : 'Register for Event'}
+                {registering ? 'Processing...' : isRegistered ? 'Unregister' : (event.capacity - (event.registeredUsers?.length || 0)) === 0 ? 'Event Full - No Seats Available' : 'Register for Event'}
               </Button>
 
               <div className="text-center">
                 <p className="text-sm text-gray-500">
-                  {event.availableSeats === 0 ? (
+                  {(event.capacity - (event.registeredUsers?.length || 0)) === 0 ? (
                     <span className="font-semibold text-red-600">
                       Event is fully booked
                     </span>
                   ) : (
                     <>
                       <span className={`font-semibold ${
-                        event.availableSeats < 10 ? 'text-red-600' : 'text-green-600'
+                        (event.capacity - (event.registeredUsers?.length || 0)) < 10 ? 'text-red-600' : 'text-green-600'
                       }`}>
-                        {event.availableSeats}
+                        {event.capacity - (event.registeredUsers?.length || 0)}
                       </span>{" "}
                       seats available
                     </>

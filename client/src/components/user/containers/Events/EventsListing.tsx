@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-
 import { Event } from "@/types";
 import { EventCard } from "@/components/base/ui/EventCard";
 import { Navbar } from "@/components/base/ui/Navbar";
@@ -14,7 +13,6 @@ export default function EventsPage() {
   const { user, logout } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -63,7 +61,7 @@ export default function EventsPage() {
         (ev) =>
           ev.title.toLowerCase().includes(q) ||
           ev.description.toLowerCase().includes(q) ||
-          ev.venue.toLowerCase().includes(q)
+          (ev.location || ev.venue || '').toLowerCase().includes(q)
       );
     }
 
