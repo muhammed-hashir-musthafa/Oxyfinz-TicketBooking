@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Card } from "@/components/base/ui/Card";
 import LoginForm from "@/components/base/forms/LoginForm";
 import toast from "react-hot-toast";
 
-const LoginPage: React.FC = () => {
+// Component to handle search params with Suspense
+const SearchParamsHandler: React.FC = () => {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -17,8 +18,16 @@ const LoginPage: React.FC = () => {
     }
   }, [searchParams]);
 
+  return null;
+};
+
+const LoginPage: React.FC = () => {
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-s px-4 sm:px-6 lg:px-8">
+      <Suspense fallback={null}>
+        <SearchParamsHandler />
+      </Suspense>
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">
